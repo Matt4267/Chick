@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8; /* Light background for contrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Center the container */
+            padding: 20px; /* Add some padding */
+        }
+        h1 {
+            text-align: center;
+            color: #ff7f50;
+            margin-bottom: 20px;
+            font-size: 2.5em; /* Increase title size */
+            transition: color 0.3s;
+        }
+        .container {
+            width: 100%; /* Full width */
+            max-width: 800px; /* Limit the max width */
+            height: auto; /* Auto height */
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden; /* Prevents overflow */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Aligns items to the start */
+        }
+        .tab {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .tab button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #ff7f50;
+            transition: color 0.3s, transform 0.2s;
+            border-radius: 5px; /* Rounded buttons */
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: box-shadow 0.3s, transform 0.3s;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            background-color: #fff; /* Table background */
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #ff7f50;
+            color: white;
+        }
+        .button {
+            padding: 10px 15px;
+            color: white;
+            background-color: #ff7f50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 10px;
+            width: 100%; /* Full-width button */
+        }
+        .button:hover {
+            background-color: #ff6347;
+            transform: scale(1.05);
+        }
+        .input-group {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="number"], input[type="text"], select, input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+            margin-bottom: 10px; /* Space between inputs */
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus, input[type="date"]:focus {
+            border-color: #ff7f50;
+            outline: none;
+        }
+        .welcome {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #ff7f50;
+        }
+        #eggChart, #meatSalesChart {
+            max-width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .logout-button {
+            background-color: #f44336; /* Red color for logout */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%; /* Full-width button */
+            text-align: center;
+            text-decoration: none; /* Remove underline */
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 20px; /* Margin above the logout button */
+        }
+        .logout-button:hover {
+            background-color: #d32f2f; /* Darker red on hover */
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="dashboardContainer">
+        <h1>Chicken Dashboard</h1>
+        <div class="welcome" id="welcomeMessage">Welcome to the Chicken Dashboard!</div>
+
+        <div class="tab">
+            <button onclick="showSection('chickenTypes')"><i class="fas fa-chicken"></i> Chicken Types</button>
+            <button onclick="showSection('eggProduction')"><i class="fas fa-egg"></i> Egg Production</button>
+            <button onclick="showSection('salesLog')"><i class="fas fa-money-bill-wave"></i> Sales Log</button>
+        </div>
+
+        <div class="section" id="chickenTypes">
+            <h2>Chicken Types</h2>
+            <div class="input-group">
+                <input type="text" id="chickenBreed" placeholder="Enter chicken breed" required>
+                <input type="number" id="chickenCount" placeholder="Enter number of chickens" min="0" required>
+                <button class="button" onclick="addChickens()"><i class="fas fa-plus"></i> Add Chickens</button>
+            </div>
+            <table id="chickenTable">
+                <tr>
+                    <th>Breed</th>
+                    <th>Count</th>
+                </tr>
+                <tbody id="chickenTableBody">
+                    <!-- Chicken breeds and counts will be logged here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="eggProduction" style="display:none;">
+            <h2>Egg Production</h2>
+            <div class="input-group">
+                <input type="number" id="eggsCollected" placeholder="Eggs Collected" min="0" required>
+                <button class="button" onclick="logEggs()"><i class="fas fa-clipboard-list"></i> Log Eggs</button>
+            </div>
+            <canvas id="eggChart"></canvas>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Eggs Laid</th>
+                </tr>
+                <tbody id="eggLog">
+                    <!-- Egg logs will be added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="salesLog" style="display:none;">
+            <h2>Sales Log</h2>
+            <div class="tab">
+                <button onclick="showSalesSection('meatSales')">Meat</button>
+                <button onclick="showSalesSection('eggSales')">Eggs</button>
+            </div>
+
+            <div class="salesSection" id="meatSales">
+                <div class="input-group">
+                    <input type="text" id="meatSaleDescription" placeholder="Sale Description">
+                    <input type="number" id="meatSaleAmount" placeholder="Amount (KES)" min="0">
+                    <input type="date" id="meatSaleDate">
+                    <button class="button" onclick="logSale('meat')"><i class="fas fa-dollar-sign"></i> Log Meat Sale</button>
+                </div>
+                <canvas id="meatSalesChart"></canvas>
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount (KES)</th>
+                    </tr>
+                    <tbody id="meatSalesLog">
+                        <!-- Meat sales will be logged here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="salesSection" id="eggSales" style="display:none;">
+                <div class="input-group">
+                    <input type="text" id="eggSaleDescription" placeholder="Sale Description">
+                    <input type="number" id="eggSaleAmount" placeholder="Amount (KES)" min="0">
+                    <input type="date" id="eggSaleDate">
+                    <button class="button" onclick="logSale('eggs')"><i class="fas fa-dollar-sign"></i> Log Egg Sale</button>
+                </div>
+                <canvas id="eggSalesChart"></canvas>
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount (KES)</th>
+                    </tr>
+                    <tbody id="eggSalesLog">
+                        <!-- Egg sales will be logged here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <a href="login.html" class="logout-button">Logout</a> <!-- Link to the homepage -->
+    </div>
+
+    <script>
+        let eggSalesData = [];
+        let meatSalesData = [];
+        let totalEggsData = [];
+        let totalMeatData = [];
+
+        function addChickens() {
+            const breed = document.getElementById('chickenBreed').value;
+            const count = document.getElementById('chickenCount').value;
+
+            if (breed && count) {
+                const tableBody = document.getElementById('chickenTableBody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `<td>${breed}</td><td>${count}</td>`;
+                tableBody.appendChild(newRow);
+                document.getElementById('chickenBreed').value = '';
+                document.getElementById('chickenCount').value = '';
+            }
+        }
+
+        function logEggs() {
+            const eggs = document.getElementById('eggsCollected').value;
+
+            if (eggs) {
+                const eggLog = document.getElementById('eggLog');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `<td>${new Date().toLocaleDateString()}</td><td>${eggs}</td>`;
+                eggLog.appendChild(newRow);
+                totalEggsData.push({ date: new Date().toLocaleDateString(), eggs: Number(eggs) });
+                document.getElementById('eggsCollected').value = '';
+                updateEggChart();
+            }
+        }
+
+        function logSale(category) {
+            const description = category === 'meat' ? document.getElementById('meatSaleDescription').value : document.getElementById('eggSaleDescription').value;
+            const amount = category === 'meat' ? document.getElementById('meatSaleAmount').value : document.getElementById('eggSaleAmount').value;
+            const date = category === 'meat' ? document.getElementById('meatSaleDate').value : document.getElementById('eggSaleDate').value;
+
+            if (description && amount && date) {
+                const salesLogTable = category === 'meat' ? document.getElementById('meatSalesLog') : document.getElementById('eggSalesLog');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `<td>${new Date(date).toLocaleDateString()}</td><td>${description}</td><td>${amount}</td>`;
+                salesLogTable.appendChild(newRow);
+
+                if (category === 'meat') {
+                    meatSalesData.push({ date: new Date(date).toLocaleDateString(), amount: Number(amount) });
+                    document.getElementById('meatSaleDescription').value = '';
+                    document.getElementById('meatSaleAmount').value = '';
+                    document.getElementById('meatSaleDate').value = '';
+                    updateMeatSalesChart();
+                } else {
+                    eggSalesData.push({ date: new Date(date).toLocaleDateString(), amount: Number(amount) });
+                    document.getElementById('eggSaleDescription').value = '';
+                    document.getElementById('eggSaleAmount').value = '';
+                    document.getElementById('eggSaleDate').value = '';
+                    updateEggSalesChart();
+                }
+            }
+        }
+
+        function updateEggChart() {
+            const ctx = document.getElementById('eggChart').getContext('2d');
+            const eggChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: totalEggsData.map(log => log.date),
+                    datasets: [{
+                        label: 'Eggs Collected',
+                        data: totalEggsData.map(log => log.eggs),
+                        backgroundColor: 'rgba(255, 127, 80, 0.6)',
+                        borderColor: 'rgba(255, 127, 80, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+        }
+
+        function updateMeatSalesChart() {
+            const ctx = document.getElementById('meatSalesChart').getContext('2d');
+            const dates = [...new Set(meatSalesData.map(log => log.date))]; // Get unique dates
+            const amounts = dates.map(date => {
+                return meatSalesData
+                    .filter(log => log.date === date)
+                    .reduce((total, log) => total + log.amount, 0); // Sum amounts for each date
+            });
+
+            const meatSalesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Total Meat Sales (KES)',
+                        data: amounts,
+                        backgroundColor: 'rgba(255, 127, 80, 0.6)',
+                        borderColor: 'rgba(255, 127, 80, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+        }
+
+        function updateEggSalesChart() {
+            const ctx = document.getElementById('eggSalesChart').getContext('2d');
+            const dates = [...new Set(eggSalesData.map(log => log.date))]; // Get unique dates
+            const amounts = dates.map(date => {
+                return eggSalesData
+                    .filter(log => log.date === date)
+                    .reduce((total, log) => total + log.amount, 0); // Sum amounts for each date
+            });
+
+            const eggSalesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Total Egg Sales (KES)',
+                        data: amounts,
+                        backgroundColor: 'rgba(0, 204, 204, 0.6)',
+                        borderColor: 'rgba(0, 204, 204, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+        }
+
+        function showSalesSection(sectionId) {
+            const sections = document.querySelectorAll('.salesSection');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        // Show the default section
+        showSection('chickenTypes'); // Show the first section
+    </script>
+</body>
+</html>
